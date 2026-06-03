@@ -1,0 +1,341 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Perpustakaan Wiyung — Catatan Pinjaman</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { 
+            --yellow: #FFE600; --black: #111111; --cream: #F4EFE6; 
+            --blue: #1A6BFF; --pink: #FF3366; --white: #FFFFFF; 
+            --green: #00E676; --mint: #A7F3D0; --sidebar: 260px;
+        }
+        body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--black); display:flex; min-height:100vh; }
+        
+        /* --- SIDEBAR NAVIGASI --- */
+        .sidebar { width:var(--sidebar); background:var(--black); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:200; border-right: 3px solid var(--black); }
+        .logo-area { background:var(--yellow); padding:24px; border-bottom:3px solid var(--black); }
+        .logo-area h2 { font-family:'Bebas Neue',sans-serif; font-size:32px; line-height:0.9; letter-spacing:1px; }
+        
+        .sidebar-user { display:flex; align-items:center; gap:12px; padding:24px; border-bottom:3px solid var(--black); color:var(--white); }
+        .avatar { width:45px; height:45px; background:var(--yellow); border:2px solid var(--white); color:var(--black); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:20px; border-radius:50%; }
+        .user-info-text .name { font-weight:800; font-size:14px; letter-spacing:0.5px; }
+        .user-info-text .role { font-family:'Space Mono',monospace; font-size:10px; color:#888; margin-top:2px; }
+        
+        .nav { flex:1; padding:20px 0; display:flex; flex-direction:column; gap:5px; }
+        .nav-item { display:flex; align-items:center; gap:12px; padding:12px 24px; font-size:12px; font-weight:800; text-transform:uppercase; color:#888; text-decoration:none; letter-spacing:1px; }
+        .nav-item:hover { color:var(--white); }
+        .nav-item.active { background:var(--yellow); color:var(--black); border-top:3px solid var(--black); border-bottom:3px solid var(--black); }
+        
+        .bottom-nav { padding:20px; display:flex; flex-direction:column; gap:15px; }
+        .btn-add { background:var(--pink); color:var(--white); text-align:center; padding:14px; font-weight:800; text-decoration:none; border:3px solid var(--black); box-shadow: 4px 4px 0px var(--black); text-transform:uppercase; font-size:14px; cursor:pointer; transition: transform 0.1s; display:block; width:100%; }
+        .btn-add:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
+
+        /* --- CONTENT AREA --- */
+        .main { margin-left:var(--sidebar); flex:1; display:flex; flex-direction:column; padding-bottom: 50px; }
+        .topbar { display:flex; align-items:center; justify-content:space-between; padding:16px 32px; background:var(--cream); border-bottom:3px solid var(--black); position:sticky; top:0; z-index:100; }
+        .search-top { display:flex; align-items:center; gap:10px; background:var(--yellow); border:3px solid var(--black); padding:10px 16px; width:400px; box-shadow: 4px 4px 0px var(--black); }
+        .search-top input { border:none; background:transparent; font-family:'Space Mono',monospace; font-size:12px; outline:none; width:100%; font-weight:700; }
+        
+        .content-pad { padding:32px; }
+        .pg-title { font-family:'Bebas Neue',sans-serif; font-size:54px; line-height:1; }
+        .pg-desc { font-family:'Space Mono',monospace; font-size:12px; color:#555; margin-top:5px; margin-bottom: 25px; }
+
+        /* STATS GRID */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+        .sc { border:3px solid var(--black); padding:16px 20px; box-shadow: 6px 6px 0px var(--black); display:flex; flex-direction:column; justify-content:center; min-height: 110px; }
+        .sc.yellow { background:var(--yellow); }
+        .sc.pink   { background:var(--pink); color: white; }
+        .sc.blue   { background:var(--blue); color: white; }
+        .sc.mint   { background:var(--mint); }
+        .sc-num { font-family:'Bebas Neue',sans-serif; font-size:48px; line-height:1; }
+        .sc-lbl { font-size:11px; font-weight:900; margin-top:4px; text-transform:uppercase; font-family:'Space Mono',monospace; }
+
+        /* TABLE TOOLBAR */
+        .tbl-toolbar { display:flex; gap:12px; align-items:center; margin-bottom:15px; }
+        .tb-search { background:var(--yellow); border:3px solid var(--black); padding:10px 14px; display:flex; flex:1; max-width:340px; box-shadow: 4px 4px 0px var(--black); }
+        .tb-search input { border:none; background:transparent; outline:none; width:100%; font-family:'Space Mono',monospace; font-weight:700; font-size:12px; }
+        .tb-filter { border:3px solid var(--black); padding:10px; font-family:'Space Mono',monospace; font-weight:700; font-size:12px; box-shadow: 4px 4px 0px var(--black); background:var(--white); cursor:pointer; }
+
+        /* TABLE STYLING */
+        .tbl-wrap { border:3px solid var(--black); box-shadow: 8px 8px 0px var(--black); background:var(--white); }
+        table { width:100%; border-collapse:collapse; }
+        thead { background:var(--black); color:var(--yellow); font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; }
+        th, td { padding:16px 20px; text-align:left; font-size:13px; font-weight:600; border-bottom: 2px solid #eee; }
+        th span { color: #555; margin-left: 3px; }
+        
+        /* BADGES */
+        .badge { display:inline-flex; padding:5px 10px; font-size:10px; font-weight:900; font-family:'Space Mono',monospace; border:2px solid var(--black); box-shadow:2px 2px 0px var(--black); }
+        .badge.dipinjam  { color:var(--blue); background:#EBF0FF; }
+        .badge.terlambat { color:var(--pink); background:#FFEBF0; }
+        .badge.kembali   { color:#00C853; background:#E0FFE8; }
+
+        /* ACTION BUTTONS */
+        .act-btn { padding:6px 12px; font-size:10px; font-weight:900; font-family:'Space Mono',monospace; border:2px solid var(--black); cursor:pointer; box-shadow: 3px 3px 0px var(--black); text-transform: uppercase; transition: transform 0.1s; }
+        .act-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0px var(--black); }
+        .act-btn.yellow { background:var(--yellow); color:black; }
+        .act-btn.pink { background:var(--white); color:var(--pink); }
+        .act-btn.blue { background:var(--blue); color:var(--white); }
+
+        /* MODAL */
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:1000; }
+        .modal { background:var(--cream); border:4px solid var(--black); box-shadow:12px 12px 0px var(--black); width:500px; }
+        .modal-head { background:var(--black); color:var(--yellow); padding:16px 20px; font-family:'Bebas Neue',sans-serif; font-size:24px; display:flex; justify-content:space-between; align-items:center; }
+        .modal-body { padding:24px; background:var(--white); }
+        .form-group { margin-bottom:18px; }
+        .form-group label { display:block; font-size:11px; font-weight:900; font-family:'Space Mono',monospace; margin-bottom:6px; }
+        .form-select { width:100%; border:3px solid var(--black); padding:12px; font-weight:600; box-shadow:4px 4px 0px var(--black); outline:none; background:var(--cream); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo-area">
+        <h2>PERPUSTAKAAN</h2>
+        <h2>WIYUNG</h2>
+    </div>
+    
+    <div class="sidebar-user">
+        <div class="avatar">{{ global_user_initials }}</div>
+        <div class="user-info-text">
+            <div class="name">{{ request.user.get_full_name|default:request.user.username|title }}</div>
+            <div class="role">Librarian Access</div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <a href="/dashboard/" class="nav-item"><span style="font-size:16px;">⊞</span> UTAMA</a>
+        <a href="/books/" class="nav-item"><span style="font-size:16px;">📚</span> DAFTAR BUKU</a>
+        <a href="/members/" class="nav-item"><span style="font-size:16px;">👥</span> DATA ANGGOTA</a>
+        <a href="/loans/" class="nav-item active"><span style="font-size:16px;">📋</span> CATATAN PINJAM</a>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="/settings/" class="nav-item" style="padding:10px 0;"><span style="font-size:16px;">⚙️</span> SETTINGS</a>
+        <a href="/logout/" class="nav-item" style="padding:0 0 15px 0;"><span style="font-size:16px;">→</span> LOGOUT</a>
+        <button class="btn-add" onclick="document.getElementById('pinjamanModal').style.display='flex'">+ ADD NEW BOOK</button>
+    </div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div style="display:flex; align-items:center; gap:10px; background:var(--yellow); border:3px solid var(--black); padding:10px 16px; box-shadow: 4px 4px 0px var(--black); width:max-content;">
+            <span style="font-size:16px;">⏱️</span>
+            <span id="liveClock" style="font-family:'Space Mono',monospace; font-size:13px; font-weight:800; letter-spacing:1px; color:var(--black);">
+                MEMUAT WAKTU...
+            </span>
+        </div>
+        
+        <div style="display:flex; gap:12px; align-items:center;">
+            <a href="/loans/" style="text-decoration:none; color:black; width:40px; height:40px; border:3px solid black; background:white; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow: 3px 3px 0px black; position:relative; cursor:pointer;" title="Notifikasi Buku Terlambat">
+                🔔
+                {% if global_notif_count > 0 %}
+                <div style="position:absolute; top:-6px; right:-6px; background:var(--pink); color:white; font-size:9px; font-weight:bold; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid black;">{{ global_notif_count }}</div>
+                {% endif %}
+            </a>
+
+            <div onclick="bukaModalPanduan()" style="width:40px; height:40px; border:3px solid black; background:white; color:var(--black); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px; box-shadow: 3px 3px 0px black; cursor:pointer;" title="Panduan Penggunaan">?</div>
+
+            <a href="/settings/" style="text-decoration:none; width:40px; height:40px; border:3px solid black; background:black; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-family:'Bebas Neue'; font-size:16px; box-shadow: 3px 3px 0px black;" title="Profil Admin ({{ request.user.username }})">
+                {{ global_user_initials }}
+            </a>
+        </div>
+    </div>
+
+    <div class="content-pad">
+        <div class="pg-title">CATATAN PINJAMAN</div>
+
+        {% for message in messages %}
+            <div style="padding:14px; border:3px solid black; background:var(--mint); font-family:'Space Mono'; font-size:12px; margin-bottom:20px; box-shadow: 4px 4px 0px black; font-weight:bold;">{{ message }}</div>
+        {% endfor %}
+
+        <div class="stats-grid">
+            <div class="sc yellow"><div class="sc-num">{{ aktif_dipinjam_count|default:"0" }}</div><div class="sc-lbl">Aktif Dipinjam</div></div>
+            <div class="sc pink"><div class="sc-num">{{ terlambat_count|default:"0" }}</div><div class="sc-lbl">Terlambat</div></div>
+            <div class="sc blue"><div class="sc-num">{{ diperpanjang_count|default:"0" }}</div><div class="sc-lbl">Diperpanjang</div></div>
+            <div class="sc mint"><div class="sc-num">{{ kembali_hari_ini_count|default:"0" }}</div><div class="sc-lbl">Kembali Hari Ini</div></div>
+        </div>
+
+        <div class="tbl-toolbar">
+            <div class="tb-search">🔍 <input type="text" placeholder="Cari judul / anggota..." id="searchInput"></div>
+            <select class="tb-filter" id="statusFilter">
+                <option value="semua">Semua Status</option>
+                <option value="dipinjam">Dipinjam</option>
+                <option value="terlambat">Terlambat</option>
+                <option value="kembali">Kembali</option>
+            </select>
+            <span id="filterCount" style="font-family:'Space Mono',monospace; font-size:12px; color:#888; margin-left:15px;"></span>
+            <button class="act-btn blue" style="margin-left:auto; padding:10px 20px;" onclick="document.getElementById('pinjamanModal').style.display='flex'">+ TAMBAH PINJAMAN</button>
+        </div>
+
+        <div class="tbl-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Judul Buku <span>↕</span></th>
+                        <th>Anggota <span>↕</span></th>
+                        <th>Kategori <span>↕</span></th>
+                        <th>Jumlah <span>↕</span></th>
+                        <th>Tgl Pinjam <span>↕</span></th>
+                        <th>Tenggat <span>↕</span></th>
+                        <th>Status <span>↕</span></th>
+                        <th>Denda <span>↕</span></th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="loanTableBody">
+                    {% for p in pinjaman_list %}
+                    <tr data-status="{{ p.status }}">
+                        <td><strong>{{ p.buku.judul }}</strong></td>
+                        <td>{{ p.anggota.nama }}</td>
+                        <td style="color:#888;">{{ p.buku.kategori|default:"-" }}</td>
+                        <td style="color:#888;">{{ p.jumlah|default:"1" }}</td>
+                        <td style="color:#888;">{{ p.tanggal_pinjam|date:"d M Y" }}</td>
+                        <td style="font-family:'Space Mono'; color:#888;">{{ p.jatuh_tempo|date:"d M Y" }}</td>
+                        <td><span class="badge {{ p.status }}">● {{ p.status|upper }}</span></td>
+                        <td style="color:var(--pink); font-weight:800;">
+                            {% if p.hitung_denda > 0 %}Rp {{ p.hitung_denda|floatformat:0 }}{% else %}-{% endif %}
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:8px;">
+                                {% if p.status != 'kembali' %}
+                                <form method="POST" action="/loans/return/{{ p.pk }}/">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="aksi" value="kembali">
+                                    <button type="submit" class="act-btn yellow">KEMBALIKAN</button>
+                                </form>
+                                {% endif %}
+                                <form method="POST" action="/loans/delete/{{ p.pk }}/">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="aksi" value="hapus">
+                                    <button type="submit" class="act-btn pink" onclick="return confirm('Hapus permanen?')">DEL</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9" style="text-align:center; padding:40px; color:#999; font-family:'Space Mono';">// Belum ada data transaksi peminjaman.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="pinjamanModal">
+    <div class="modal">
+        <div class="modal-head">TAMBAH PINJAMAN <span style="cursor:pointer" onclick="document.getElementById('pinjamanModal').style.display='none'">✕</span></div>
+        <div class="modal-body">
+            <form method="POST" action="/loans/">
+                {% csrf_token %}
+                <input type="hidden" name="aksi" value="pinjam">
+                <div class="form-group">
+                    <label>PILIH BUKU *</label>
+                    <select name="buku_id" class="form-select" required>
+                        {% for buku in buku_list %}<option value="{{ buku.pk }}">{{ buku.judul }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>PILIH ANGGOTA *</label>
+                    <select name="anggota_id" class="form-select" required>
+                        {% for anggota in anggota_list %}<option value="{{ anggota.pk }}">{{ anggota.nama }}</option>{% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-add" style="width:100%; box-shadow:none; background:var(--yellow); color:black;">SIMPAN TRANSAKSI</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="modalPanduan" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #F4EFE6; border: 4px solid #111111; padding: 30px; width: 100%; max-width: 520px; box-shadow: 8px 8px 0px #111111;">
+        <h2 style="font-family: 'Bebas Neue', sans-serif; font-size: 32px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Bantuan & Panduan Sistem</h2>
+        <p style="font-family: 'Space Mono', monospace; font-size: 11px; color:#555; margin-bottom: 15px;">// Modul Ringkas Navigasi Utama</p>
+        <hr style="border: 2px solid #111111; margin-bottom: 20px;">
+        
+        <ul style="line-height: 1.8; font-size: 13px; font-weight: 600; list-style: none; display: flex; flex-direction: column; gap: 12px;">
+            <li>💡 <strong style="color: var(--pink);">Tombol Lonceng (🔔):</strong> Menampilkan total transaksi yang melewati batas tenggat waktu pinjam secara real-time.</li>
+            <li>⚙️ <strong style="color: var(--blue);">Tombol Avatar ({{ global_user_initials }}):</strong> Akses cepat menuju halaman konfigurasi denda sirkulasi, durasi pinjam, dan hak akses admin.</li>
+            <li>📌 <strong style="color: var(--black);">Data Dinamis:</strong> Seluruh kartu indikator statistik terhubung langsung ke basis data utama perpustakaan.</li>
+        </ul>
+
+        <div style="margin-top: 30px; text-align: right;">
+            <button onclick="tutupModalPanduan()" style="background: var(--yellow); border: 3px solid #111111; font-weight: 800; text-transform: uppercase; font-size: 13px; padding: 10px 24px; cursor: pointer; box-shadow: 4px 4px 0px #111111; transition: transform 0.1s;">Paham!</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Filter dan Counter Real-time Sistem Ter-Saring
+    function runFilter() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const f = document.getElementById('statusFilter').value;
+        let visibleCount = 0;
+        const rows = document.querySelectorAll('#loanTableBody tr:not(:has(td[colspan]))');
+        
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const status = row.getAttribute('data-status');
+            const matchQ = text.includes(q);
+            const matchF = (f === 'semua' || status === f);
+            
+            if (matchQ && matchF) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        const counter = document.getElementById('filterCount');
+        if (q !== '' || f !== 'semua') {
+            counter.innerText = `${visibleCount} tersaring`;
+        } else {
+            counter.innerText = '';
+        }
+    }
+    document.getElementById('searchInput').addEventListener('input', runFilter);
+    document.getElementById('statusFilter').addEventListener('change', runFilter);
+
+    // Fungsi Manajemen Pop-Up Panduan
+    function bukaModalPanduan() {
+        document.getElementById('modalPanduan').style.display = 'flex';
+    }
+    function tutupModalPanduan() {
+        document.getElementById('modalPanduan').style.display = 'none';
+    }
+    
+    window.onclick = function(event) {
+        let panduanModal = document.getElementById('modalPanduan');
+        let pinjamanModal = document.getElementById('pinjamanModal');
+        
+        if (event.target == panduanModal) {
+            panduanModal.style.display = "none";
+        }
+        if (event.target == pinjamanModal) {
+            pinjamanModal.style.display = "none";
+        }
+    }
+
+    function updateClock() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+        const dateString = now.toLocaleDateString('id-ID', options).toUpperCase();
+        
+        let hours = now.getHours().toString().padStart(2, '0');
+        let minutes = now.getMinutes().toString().padStart(2, '0');
+        let seconds = now.getSeconds().toString().padStart(2, '0');
+        
+        const clockEl = document.getElementById('liveClock');
+        if (clockEl) {
+            clockEl.innerText = `${dateString} | ${hours}:${minutes}:${seconds} WIB`;
+        }
+    }
+    
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
+</body>
+</html>

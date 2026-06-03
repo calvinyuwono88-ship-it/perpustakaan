@@ -1,0 +1,381 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Perpustakaan Calvin — Data Anggota</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --yellow: #FFE600; --black: #111111; --cream: #F4EFE6;
+            --blue: #1A6BFF; --pink: #FF3366; --white: #FFFFFF; 
+            --green: #00C853; --mint: #A7F3D0; --sidebar: 260px;
+        }
+        body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--black); display:flex; min-height:100vh; }
+        
+        /* SIDEBAR */
+        .sidebar { width:var(--sidebar); background:var(--black); display:flex; flex-direction:column; position:fixed; top:0;left:0;bottom:0; z-index:200; border-right: 3px solid var(--black); }
+        .logo-area { background:var(--yellow); padding:24px; border-bottom:3px solid var(--black); }
+        .logo-area h2 { font-family:'Bebas Neue',sans-serif; font-size:32px; line-height:0.9; letter-spacing:1px; }
+        .sidebar-user { display:flex; align-items:center; gap:12px; padding:24px; border-bottom:3px solid var(--black); color:var(--white); }
+        .avatar { width:45px; height:45px; background:var(--yellow); border:2px solid var(--white); color:var(--black); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:20px; border-radius:50%; }
+        .user-info-text .name { font-weight:800; font-size:14px; letter-spacing:0.5px; }
+        .user-info-text .role { font-family:'Space Mono',monospace; font-size:10px; color:#888; margin-top:2px; }
+        .nav { flex:1; padding:20px 0; display:flex; flex-direction:column; gap:5px; }
+        .nav-item { display:flex; align-items:center; gap:12px; padding:12px 24px; font-size:12px; font-weight:800; text-transform:uppercase; color:#888; text-decoration:none; letter-spacing:1px; }
+        .nav-item:hover { color:var(--white); }
+        .nav-item.active { background:var(--yellow); color:var(--black); border-top:3px solid var(--black); border-bottom:3px solid var(--black); }
+        .bottom-nav { padding:20px; display:flex; flex-direction:column; gap:15px; }
+        .btn-add { background:var(--pink); color:var(--white); text-align:center; padding:14px; font-weight:800; text-decoration:none; border:3px solid var(--black); box-shadow: 4px 4px 0px var(--black); text-transform:uppercase; font-size:14px; cursor:pointer; transition: transform 0.1s; display:block; width:100%; }
+        .btn-add:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
+
+        /* MAIN AREA & TOPBAR */
+        .main { margin-left:var(--sidebar); flex:1; display:flex; flex-direction:column; padding-bottom: 50px; }
+        .topbar { display:flex; align-items:center; justify-content:space-between; padding:16px 32px; background:var(--cream); border-bottom:3px solid var(--black); position:sticky; top:0; z-index:100; }
+        .search-top { display:flex; align-items:center; gap:10px; background:var(--yellow); border:3px solid var(--black); padding:10px 16px; width:400px; box-shadow: 4px 4px 0px var(--black); }
+        .search-top input { border:none; background:transparent; font-family:'Space Mono',monospace; font-size:12px; outline:none; width:100%; font-weight:700; }
+        .top-icons { display:flex; gap:15px; align-items:center; }
+        .icon-box { width:40px; height:40px; border:3px solid var(--black); background:var(--white); display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow: 3px 3px 0px var(--black); position:relative; cursor:pointer; }
+        .notif-badge { position:absolute; top:-8px; right:-8px; background:var(--pink); color:var(--white); font-size:10px; font-weight:bold; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--black); }
+
+        /* CONTENT */
+        .content-pad { padding:32px; }
+        .pg-title { font-family:'Bebas Neue',sans-serif; font-size:54px; line-height:1; }
+        .pg-desc { font-family:'Space Mono',monospace; font-size:12px; color:#555; margin-top:5px; margin-bottom: 25px; }
+
+        /* STAT CARDS PERSEGI PANJANG */
+        .stat-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:30px; }
+        .sc { border:3px solid var(--black); padding:16px 20px; box-shadow: 6px 6px 0px var(--black); display:flex; flex-direction:column; justify-content:center; position:relative; min-height: 110px; }
+        .sc.yellow { background:var(--yellow); }
+        .sc.blue   { background:var(--blue); color:var(--white); }
+        .sc.mint   { background:var(--mint); }
+        .sc-num { font-family:'Bebas Neue',sans-serif; font-size:52px; line-height:1; }
+        .sc-lbl { font-size:11px; font-weight:900; margin-top:4px; text-transform:uppercase; font-family:'Space Mono',monospace; letter-spacing:0.5px; }
+
+        /* TOOLBAR TABLE */
+        .tbl-toolbar { display:flex; gap:12px; align-items:center; margin-bottom:15px; }
+        .tb-search { background:var(--yellow); border:3px solid var(--black); padding:10px 14px; display:flex; flex:1; max-width:340px; box-shadow: 4px 4px 0px var(--black); }
+        .tb-search input { border:none; background:transparent; outline:none; width:100%; font-family:'Space Mono',monospace; font-weight:700; font-size:12px; }
+
+        /* TABLE */
+        .tbl-wrap { border:3px solid var(--black); box-shadow: 8px 8px 0px var(--black); background:var(--white); }
+        table { width:100%; border-collapse:collapse; }
+        thead { background:var(--black); color:var(--yellow); font-family:'Space Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing: 1px; }
+        th, td { padding:16px 20px; text-align:left; font-size:13px; font-weight:600; }
+        tbody tr { border-bottom:2px solid #eee; }
+        tbody tr:last-child { border-bottom:none; }
+
+        /* BADGES & BUTTONS */
+        .badge-status { font-family:'Space Mono',monospace; font-size:10px; font-weight:800; padding:4px 10px; border:2px solid var(--black); display:inline-block; box-shadow: 2px 2px 0px var(--black); text-transform: uppercase; }
+        .badge-aktif { background:var(--mint); color:var(--black); }
+
+        .btn-group { display:flex; gap:8px; }
+        .act-btn { padding:6px 12px; font-size:10px; font-weight:900; font-family:'Space Mono',monospace; border:2px solid var(--black); cursor:pointer; box-shadow: 3px 3px 0px var(--black); transition:transform 0.1s; text-transform:uppercase; }
+        .act-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0px var(--black); }
+        .act-btn.edit { background:var(--yellow); color:var(--black); }
+        .act-btn.del  { background:var(--white); color:var(--pink); }
+
+        /* ALERTS */
+        .sys-alert { padding:14px 18px; border:3px solid var(--black); font-family:'Space Mono',monospace; font-size:12px; margin-bottom:20px; box-shadow: 4px 4px 0px var(--black); font-weight:bold; }
+        .sys-alert.success { background:var(--mint); }
+        .sys-alert.error   { background:var(--pink); color:white; }
+
+        /* MODAL */
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:1000; }
+        .modal { background:var(--cream); border:4px solid var(--black); box-shadow:12px 12px 0px var(--black); width:500px; }
+        .modal-head { background:var(--black); color:var(--yellow); padding:16px 20px; font-family:'Bebas Neue',sans-serif; font-size:24px; display:flex; justify-content:space-between; align-items:center; letter-spacing: 1px;}
+        .modal-body { padding:24px; background:var(--white); }
+        .form-group { margin-bottom:18px; }
+        .form-group label { display:block; font-size:11px; font-weight:900; font-family:'Space Mono',monospace; text-transform:uppercase; margin-bottom:6px; }
+        .form-input { width:100%; border:3px solid var(--black); padding:12px; font-size:13px; font-family:'DM Sans',sans-serif; font-weight:600; box-shadow:4px 4px 0px var(--black); outline:none; background:var(--cream); }
+        .form-input:focus { background:var(--white); }
+        .btn-submit { background:var(--yellow); width:100%; padding:14px; font-size:14px; font-weight:900; font-family:'Space Mono',monospace; border:3px solid var(--black); cursor:pointer; box-shadow: 4px 4px 0px var(--black); transition:transform 0.1s; margin-top:10px;}
+        .btn-submit:active { transform: translate(3px,3px); box-shadow: 1px 1px 0px var(--black); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo-area">
+        <h2>PERPUSTAKAAN</h2>
+        <h2>WIYUNG</h2>
+    </div>
+    
+    <div class="sidebar-user">
+        <div class="avatar">{{ global_user_initials }}</div>
+        <div class="user-info-text">
+            <div class="name">{{ request.user.username|title }} </div>
+            <div class="role">Librarian Access</div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <a href="/dashboard/" class="nav-item"><span style="font-size:16px;">⊞</span> UTAMA</a>
+        <a href="/books/" class="nav-item"><span style="font-size:16px;">📚</span> DAFTAR BUKU</a>
+        <a href="/members/" class="nav-item active"><span style="font-size:16px;">👥</span> DATA ANGGOTA</a>
+        <a href="/loans/" class="nav-item"><span style="font-size:16px;">📋</span> CATATAN PINJAM</a>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="/settings/" class="nav-item" style="padding:10px 0;"><span style="font-size:16px;">⚙️</span> SETTINGS</a>
+        <a href="/logout/" class="nav-item" style="padding:0 0 15px 0;"><span style="font-size:16px;">→</span> LOGOUT</a>
+        <button class="btn-add" onclick="document.getElementById('anggotaModal').style.display='flex'">+ TAMBAH ANGGOTA</button>
+    </div>
+</div>
+
+<div class="main">
+    
+    <div class="topbar">
+        <div style="display:flex; align-items:center; gap:10px; background:var(--yellow); border:3px solid var(--black); padding:10px 16px; box-shadow: 4px 4px 0px var(--black); width:max-content;">
+            <span style="font-size:16px;">⏱️</span>
+            <span id="liveClock" style="font-family:'Space Mono',monospace; font-size:13px; font-weight:800; letter-spacing:1px; color:var(--black);">
+                MEMUAT WAKTU...
+            </span>
+        </div>
+        
+        <div style="display:flex; gap:12px; align-items:center;">
+            <a href="/loans/" style="text-decoration:none; color:black; width:40px; height:40px; border:3px solid black; background:white; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow: 3px 3px 0px black; position:relative; cursor:pointer;" title="Notifikasi Buku Terlambat">
+                🔔
+                {% if global_notif_count > 0 %}
+                <div style="position:absolute; top:-6px; right:-6px; background:var(--pink); color:white; font-size:9px; font-weight:bold; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid black;">{{ global_notif_count }}</div>
+                {% endif %}
+            </a>
+
+            <div onclick="bukaModalPanduan()" style="width:40px; height:40px; border:3px solid black; background:white; color:var(--black); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px; box-shadow: 3px 3px 0px black; cursor:pointer;" title="Panduan Penggunaan">?</div>
+
+            <a href="/settings/" style="text-decoration:none; width:40px; height:40px; border:3px solid black; background:black; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-family:'Bebas Neue'; font-size:16px; box-shadow: 3px 3px 0px black;" title="Profil Admin ({{ request.user.username }})">
+                {{ global_user_initials }}
+            </a>
+        </div>
+    </div>
+
+    <div class="content-pad">
+        <div class="pg-title">DATA ANGGOTA</div>
+
+        {% for message in messages %}
+            <div class="sys-alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+
+        <div class="stat-grid">
+            <div class="sc yellow">
+                <div class="sc-lbl">TOTAL ANGGOTA</div>
+                <div class="sc-num">{{ anggota_list|length }}</div>
+            </div>
+            <div class="sc blue">
+                <div class="sc-lbl">ANGGOTA AKTIF</div>
+                <div class="sc-num" id="totalAktifCount">{{ anggota_list|length }}</div>
+            </div>
+            <div class="sc mint">
+                <div class="sc-lbl">ANGGOTA BARU</div>
+                <div class="sc-num">{{ anggota_baru_count|default:"0" }}</div>
+            </div>
+        </div>
+
+        <div class="tbl-toolbar">
+            <div class="tb-search">
+                🔍 <input type="text" placeholder="Cari nama / email..." id="searchInput">
+            </div>
+            
+            <button class="act-btn" style="background:var(--blue); color:var(--white); padding:10px 18px; font-size:12px; margin-left:auto;" onclick="document.getElementById('anggotaModal').style.display='flex'">
+                + TAMBAH ANGGOTA
+            </button>
+        </div>
+
+        <div class="tbl-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama Lengkap ↕</th>
+                        <th>ID Anggota ↕</th>
+                        <th>Email ↕</th>
+                        <th>Total Pinjam ↕</th>
+                        <th>Status ↕</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for anggota in anggota_list %}
+                    <tr>
+                        <td><strong>{{ anggota.nama }}</strong></td>
+                        <td style="font-family:'Space Mono',monospace; font-size:12px; color:#555;">{{ anggota.id_anggota }}</td>
+                        <td>{{ anggota.email }}</td>
+                        <td style="font-family:'Space Mono',monospace; font-weight:bold;">
+                            {{ anggota.total_pinjaman_aktif|default:"0" }} Buku
+                        </td>
+                        <td>
+                            <span class="badge-status badge-aktif">AKTIF</span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button type="button" class="act-btn edit" onclick="bukaModalEdit('{{ anggota.pk }}', '{{ anggota.nama|escapejs }}', '{{ anggota.id_anggota|escapejs }}', '{{ anggota.email|escapejs }}')">EDIT</button>
+                                
+                                <form method="POST" action="/members/delete/{{ anggota.pk }}/" style="display:inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="aksi" value="hapus">
+                                    <button type="submit" class="act-btn del" onclick="return confirm('Hapus anggota {{ anggota.nama }}?')">DEL</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" style="text-align:center; padding:30px; color:#999; font-family:'Space Mono',monospace;">
+                        Belum ada anggota terdaftar. Silakan lakukan registrasi!
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="anggotaModal">
+    <div class="modal">
+        <div class="modal-head">
+            REGISTRASI MEMBER BARU
+            <span style="cursor:pointer; font-family:'DM Sans',sans-serif;" onclick="document.getElementById('anggotaModal').style.display='none'">✕</span>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="/members/">
+                {% csrf_token %}
+                <input type="hidden" name="aksi" value="tambah">
+                
+                <div class="form-group">
+                    <label>Nama Lengkap *</label>
+                    <input type="text" name="nama" class="form-input" placeholder="Nama lengkap anggota" required>
+                </div>
+                <div class="form-group">
+                    <label>ID Anggota *</label>
+                    <input type="text" name="id_anggota" class="form-input" placeholder="Contoh: MBR-001" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" class="form-input" placeholder="email@domain.com" required>
+                </div>
+                
+                <button type="submit" class="btn-submit" style="background:var(--blue); color:white;">DAFTARKAN ANGGOTA</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-head">
+            EDIT DATA MEMBER
+            <span style="cursor:pointer; font-family:'DM Sans',sans-serif;" onclick="document.getElementById('editModal').style.display='none'">✕</span>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="/members/">
+                {% csrf_token %}
+                <input type="hidden" name="aksi" value="edit">
+                <input type="hidden" name="pk" id="edit_pk">
+                
+                <div class="form-group">
+                    <label>Nama Lengkap *</label>
+                    <input type="text" name="nama" id="edit_nama" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>ID Anggota *</label>
+                    <input type="text" name="id_anggota" id="edit_id_anggota" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" id="edit_email" class="form-input" required>
+                </div>
+                
+                <button type="submit" class="btn-submit" style="background:var(--yellow); color:var(--black);">SIMPAN PERUBAHAN</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="modalPanduan" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #F4EFE6; border: 4px solid #111111; padding: 30px; width: 100%; max-width: 520px; box-shadow: 8px 8px 0px #111111;">
+        <h2 style="font-family: 'Bebas Neue', sans-serif; font-size: 32px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Bantuan & Panduan Sistem</h2>
+        <p style="font-family: 'Space Mono', monospace; font-size: 11px; color:#555; margin-bottom: 15px;">// Modul Ringkas Navigasi Utama</p>
+        <hr style="border: 2px solid #111111; margin-bottom: 20px;">
+        
+        <ul style="line-height: 1.8; font-size: 13px; font-weight: 600; list-style: none; display: flex; flex-direction: column; gap: 12px;">
+            <li>💡 <strong style="color: var(--pink);">Tombol Lonceng (🔔):</strong> Menampilkan total transaksi yang melewati batas tenggat waktu pinjam secara real-time.</li>
+            <li>⚙️ <strong style="color: var(--blue);">Tombol Avatar ({{ global_user_initials }}):</strong> Akses cepat menuju halaman konfigurasi denda sirkulasi, durasi pinjam, dan hak akses admin.</li>
+            <li>📌 <strong style="color: var(--black);">Data Dinamis:</strong> Seluruh kartu indikator statistik terhubung langsung ke basis data utama perpustakaan.</li>
+        </ul>
+
+        <div style="margin-top: 30px; text-align: right;">
+            <button onclick="tutupModalPanduan()" style="background: var(--yellow); border: 3px solid #111111; font-weight: 800; text-transform: uppercase; font-size: 13px; padding: 10px 24px; cursor: pointer; box-shadow: 4px 4px 0px #111111; transition: transform 0.1s;">Paham!</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        let totalTerlihat = 0;
+
+        document.querySelectorAll('tbody tr').forEach(row => {
+            if (row.cells.length > 1) {
+                const cocok = row.innerText.toLowerCase().includes(q);
+                row.style.display = cocok ? '' : 'none';
+                if (cocok) totalTerlihat++;
+            }
+        });
+
+        document.getElementById('totalAktifCount').innerText = totalTerlihat;
+    });
+
+    function bukaModalEdit(pk, nama, id_anggota, email) {
+        document.getElementById('edit_pk').value = pk;
+        document.getElementById('edit_nama').value = nama;
+        document.getElementById('edit_id_anggota').value = id_anggota;
+        document.getElementById('edit_email').value = email;
+        
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function bukaModalPanduan() {
+        document.getElementById('modalPanduan').style.display = 'flex';
+    }
+    function tutupModalPanduan() {
+        document.getElementById('modalPanduan').style.display = 'none';
+    }
+
+    window.addEventListener('click', function(event) {
+        let panduanModal = document.getElementById('modalPanduan');
+        let anggotaModal = document.getElementById('anggotaModal');
+        let editModal = document.getElementById('editModal');
+        
+        if (event.target == panduanModal) {
+            panduanModal.style.display = "none";
+        }
+        if (event.target == anggotaModal) {
+            anggotaModal.style.display = "none";
+        }
+        if (event.target == editModal) {
+            editModal.style.display = "none";
+        }
+    });
+
+    function updateClock() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+        const dateString = now.toLocaleDateString('id-ID', options).toUpperCase();
+        
+        let hours = now.getHours().toString().padStart(2, '0');
+        let minutes = now.getMinutes().toString().padStart(2, '0');
+        let seconds = now.getSeconds().toString().padStart(2, '0');
+        
+        const clockEl = document.getElementById('liveClock');
+        if (clockEl) {
+            clockEl.innerText = `${dateString} | ${hours}:${minutes}:${seconds} WIB`;
+        }
+    }
+    
+
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
+<script src="{% static 'js/utils.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perpustakaan Calvin — Admin Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        :root { 
+            --yellow: #FFE600; 
+            --black: #111111; 
+            --pink: #FF66A3; 
+            --blue: #99AAFF;
+            --white: #FFFFFF;
+        }
+
+        body { 
+            font-family: 'DM Sans', sans-serif; 
+            /* Latar belakang kuning dengan pola titik-titik hitam */
+            background-color: var(--yellow);
+            background-image: radial-gradient(var(--black) 2px, transparent 2px);
+            background-size: 28px 28px;
+            color: var(--black); 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+
+        .login-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        /* REVISI: Kotak solid untuk judul atas */
+        .top-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 42px;
+            letter-spacing: 2px;
+            color: var(--black);
+            background: var(--white);
+            border: 4px solid var(--black);
+            box-shadow: 6px 6px 0px var(--black);
+            padding: 15px 30px;
+            margin-bottom: 50px;
+            text-align: center;
+            line-height: 1;
+            display: inline-block;
+        }
+
+        .login-card {
+            background: var(--white);
+            border: 4px solid var(--black);
+            box-shadow: 12px 12px 0px var(--black);
+            width: 100%;
+            padding: 50px 40px 40px;
+            position: relative;
+            text-align: center;
+        }
+
+        .icon-badge {
+            width: 70px;
+            height: 70px;
+            background-color: var(--pink);
+            border: 4px solid var(--black);
+            box-shadow: 6px 6px 0px var(--black);
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 38px;
+            letter-spacing: 1px;
+            color: var(--black);
+            margin-bottom: 30px;
+            margin-top: 10px;
+        }
+
+        .error-box { 
+            background: var(--pink); 
+            border: 3px solid var(--black); 
+            box-shadow: 4px 4px 0px var(--black);
+            color: var(--white); 
+            padding: 12px 14px; 
+            font-family: 'Space Mono', monospace; 
+            font-size: 12px; 
+            font-weight: bold;
+            margin-bottom: 24px; 
+            text-align: left;
+        }
+
+        .input-group { 
+            text-align: left; 
+            margin-bottom: 24px; 
+        }
+
+        .input-label { 
+            display: block; 
+            font-size: 14px; 
+            font-weight: 800; 
+            color: var(--black); 
+            margin-bottom: 8px; 
+        }
+
+        .form-input { 
+            width: 100%; 
+            background: #F4EFE6; 
+            border: 3px solid var(--black); 
+            box-shadow: 6px 6px 0px var(--black);
+            padding: 14px 16px; 
+            font-family: 'DM Sans', sans-serif; 
+            font-size: 14px; 
+            font-weight: 600;
+            color: var(--black); 
+            outline: none; 
+            transition: background 0.2s; 
+        }
+
+        .form-input::placeholder {
+            color: #999;
+            font-weight: 500;
+        }
+
+        .form-input:focus { 
+            background: var(--white); 
+        }
+
+        .login-btn { 
+            width: 100%; 
+            background: var(--blue); 
+            color: var(--black); 
+            border: 3px solid var(--black); 
+            box-shadow: 6px 6px 0px var(--black);
+            padding: 16px; 
+            font-family: 'DM Sans', sans-serif; 
+            font-weight: 900; 
+            font-size: 16px; 
+            letter-spacing: 1px;
+            text-transform: uppercase; 
+            cursor: pointer; 
+            margin-top: 10px;
+            transition: transform 0.1s; 
+        }
+
+        .login-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 2px 2px 0px var(--black);
+        }
+
+        .bottom-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--black);
+            background: var(--white);
+            border: 3px solid var(--black);
+            box-shadow: 4px 4px 0px var(--black);
+            padding: 10px 20px;
+            margin-top: 45px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+    
+    <div class="top-title">PERPUSTAKAAN WIYUNG</div>
+
+    <div class="login-card">
+        <div class="icon-badge">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6H21V18H3V6Z" fill="#111" stroke="#111" stroke-width="2"/>
+                <path d="M3 10H21" stroke="white" stroke-width="2"/>
+                <path d="M6 8H8" stroke="white" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <div class="login-title">ADMIN LOGIN</div>
+
+        {% for message in messages %}
+            <div class="error-box">⚠ {{ message }}</div>
+        {% endfor %}
+
+        <form method="POST" action="/login/">
+            {% csrf_token %}
+            <div class="input-group">
+                <label class="input-label">Username</label>
+                <input class="form-input" type="text" name="username" placeholder="Enter username" required autocomplete="username">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Password</label>
+                <input class="form-input" type="password" name="password" placeholder="Enter password" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="login-btn">LET'S GO!</button>
+        </form>
+    </div>
+
+    <div class="bottom-title">SISTEM PORTAL ADMIN</div>
+
+</div>
+
+</body>
+</html>

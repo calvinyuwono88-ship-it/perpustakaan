@@ -1,0 +1,10 @@
+# Mengabaikan environment lokal
+env/
+venv/
+
+# Mengabaikan file cache Python yang bikin error di komputer lain
+__pycache__/
+*.pyc
+
+# Mengabaikan file database lokal
+db.sqlite3

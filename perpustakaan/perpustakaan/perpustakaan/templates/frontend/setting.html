@@ -1,0 +1,348 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Perpustakaan Calvin — Pengaturan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { 
+            --yellow: #FFE600; --black: #111111; --cream: #F4EFE6; 
+            --blue: #1A6BFF; --pink: #FF3366; --white: #FFFFFF; 
+            --green: #00E676; --mint: #A7F3D0; --sidebar: 260px;
+        }
+        body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--black); display:flex; min-height:100vh; }
+        
+        /* --- SIDEBAR KONSISTEN (SAMA SEPERTI DASHBOARD) --- */
+        .sidebar { width: var(--sidebar); background: var(--black); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 200; border-right: 3px solid var(--black); }
+        .logo-area { background: var(--yellow); padding: 24px; border-bottom: 3px solid var(--black); }
+        .logo-area h2 { font-family: 'Bebas Neue', sans-serif; font-size: 32px; line-height: 0.9; letter-spacing: 1px; margin: 0; }
+        .sidebar-user { display: flex; align-items: center; gap: 12px; padding: 24px; border-bottom: 3px solid var(--black); color: var(--white); }
+        .avatar { width: 45px; height: 45px; background: var(--yellow); border: 2px solid var(--white); color: var(--black); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 20px; border-radius: 50%; }
+        .user-info-text .name { font-weight: 800; font-size: 14px; letter-spacing: 0.5px; }
+        .user-info-text .role { font-family: 'Space Mono', monospace; font-size: 10px; color: #888; margin-top: 2px; }
+        
+        .nav { flex: 1; padding: 20px 0; display: flex; flex-direction: column; gap: 5px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #888; text-decoration: none; letter-spacing: 1px; }
+        .nav-item:hover { color: var(--white); }
+        .nav-item.active { background: var(--yellow); color: var(--black); border-top: 3px solid var(--black); border-bottom: 3px solid var(--black); }
+        
+        .bottom-nav { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .btn-add { background: var(--pink); color: var(--white); text-align: center; padding: 14px; font-weight: 800; text-decoration: none; border: 3px solid var(--black); box-shadow: 4px 4px 0px var(--black); text-transform: uppercase; font-size: 14px; cursor: pointer; transition: transform 0.1s; display: block; width: 100%; }
+        .btn-add:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
+
+        /* --- CONTENT AREA & TOPBAR --- */
+        .main { margin-left:var(--sidebar); flex:1; display:flex; flex-direction:column; padding-bottom: 50px; }
+        .topbar { display:flex; align-items:center; justify-content:space-between; padding:16px 32px; background:var(--cream); border-bottom:3px solid var(--black); position:sticky; top:0; z-index:100; }
+        .search-top { display:flex; align-items:center; gap:10px; background:var(--yellow); border:3px solid var(--black); padding:10px 16px; width:400px; box-shadow: 4px 4px 0px var(--black); }
+        .search-top input { border:none; background:transparent; font-family:'Space Mono',monospace; font-size:12px; outline:none; width:100%; font-weight:700; }
+        
+        .content-pad { padding:32px; max-width: 900px; }
+        .pg-title { font-family:'Bebas Neue',sans-serif; font-size:54px; line-height:1; }
+        .pg-desc { font-family:'Space Mono',monospace; font-size:12px; color:#555; margin-top:5px; margin-bottom: 30px; }
+
+        /* --- BRUTALIST GROUPED CARDS --- */
+        .settings-card { background:var(--white); border:4px solid var(--black); box-shadow:10px 10px 0px var(--black); padding:28px; margin-bottom:35px; }
+        .card-header { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:1px; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 3px solid var(--black); display: flex; align-items: center; gap: 10px; }
+        
+        /* TOGGLE SWITCHES */
+        .toggle-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; padding-bottom:12px; border-bottom:2px dashed #ccc; }
+        .toggle-row:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .toggle-label h4 { font-size:14px; font-weight:800; color:var(--black); }
+        .toggle-label p { font-family:'Space Mono',monospace; font-size:11px; color:#666; margin-top:2px; }
+        
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #fff; border:3px solid var(--black); transition: .2s; box-shadow:2px 2px 0px var(--black); }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: var(--black); transition: .2s; }
+        input:checked + .slider { background-color: var(--yellow); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* FORM FIELDS */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom:18px; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-group label { display:block; font-size:11px; font-weight:900; font-family:'Space Mono',monospace; margin-bottom:6px; text-transform:uppercase; }
+        .form-input { width:100%; border:3px solid var(--black); padding:12px; font-weight:700; box-shadow:4px 4px 0px var(--black); outline:none; background:var(--cream); font-family:'DM Sans', sans-serif; font-size:14px; }
+        .form-input:focus { background:#fffdf0; border-color: var(--black); }
+
+        /* BUTTONS */
+        .form-actions { display:flex; justify-content:flex-end; margin-top:15px; }
+        .btn-action { padding:12px 24px; font-size:12px; font-weight:900; font-family:'Space Mono',monospace; border:3px solid var(--black); cursor:pointer; box-shadow: 4px 4px 0px var(--black); text-transform: uppercase; transition: transform 0.1s; background: var(--yellow); color: var(--black); }
+        .btn-action:active { transform: translate(3px,3px); box-shadow: 1px 1px 0px var(--black); }
+        .btn-action.blue-btn { background: var(--blue); color: white; }
+
+        /* ALERTS & LOGS */
+        .alert { padding:14px; border:3px solid var(--black); background:var(--mint); font-family:'Space Mono'; font-size:12px; margin-bottom:24px; box-shadow: 4px 4px 0px var(--black); font-weight:bold; }
+        .alert.error { background: var(--pink); color: white; }
+        .info-card { background:var(--black); color:var(--yellow); border:3px solid var(--black); padding:20px; font-family:'Space Mono',monospace; box-shadow:6px 6px 0px #888; font-size:12px; }
+        .info-card strong { font-size:16px; display:block; margin-bottom:8px; font-family:'Bebas Neue'; letter-spacing:1px; color:var(--white); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo-area">
+        <h2>PERPUSTAKAAN</h2>
+        <h2>WIYUNG</h2>
+    </div>
+    
+    <div class="sidebar-user">
+        <div class="avatar">{{ global_user_initials }}</div>
+        <div class="user-info-text">
+            <div class="name">{{ request.user.get_full_name|default:request.user.username|title }}</div>
+            <div class="role">Librarian Access</div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <a href="/dashboard/" class="nav-item"><span style="font-size:16px;">⊞</span> UTAMA</a>
+        <a href="/books/" class="nav-item"><span style="font-size:16px;">📚</span> DAFTAR BUKU</a>
+        <a href="/members/" class="nav-item"><span style="font-size:16px;">👥</span> DATA ANGGOTA</a>
+        <a href="/loans/" class="nav-item"><span style="font-size:16px;">📋</span> CATATAN PINJAM</a>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="/settings/" class="nav-item active" style="padding:10px 0;"><span style="font-size:16px;">⚙️</span> SETTINGS</a>
+        <a href="/logout/" class="nav-item" style="padding:0 0 15px 0;"><span style="font-size:16px;">→</span> LOGOUT</a>
+        <button class="btn-add" onclick="window.location.href='/books/'">+ ADD NEW BOOK</button>
+    </div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div style="display:flex; align-items:center; gap:10px; background:var(--yellow); border:3px solid var(--black); padding:10px 16px; box-shadow: 4px 4px 0px var(--black); width:max-content;">
+            <span style="font-size:16px;">⏱️</span>
+            <span id="liveClock" style="font-family:'Space Mono',monospace; font-size:13px; font-weight:800; letter-spacing:1px; color:var(--black);">
+                MEMUAT WAKTU...
+            </span>
+        </div>
+        
+        <div style="display:flex; gap:12px; align-items:center;">
+            <a href="/loans/" style="text-decoration:none; color:black; width:40px; height:40px; border:3px solid black; background:white; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow: 3px 3px 0px black; position:relative; cursor:pointer;" title="Notifikasi Buku Terlambat">
+                🔔
+                {% if global_notif_count > 0 %}
+                <div style="position:absolute; top:-6px; right:-6px; background:var(--pink); color:white; font-size:9px; font-weight:bold; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid black;">{{ global_notif_count }}</div>
+                {% endif %}
+            </a>
+
+            <div onclick="bukaModalPanduan()" style="width:40px; height:40px; border:3px solid black; background:white; color:var(--black); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:16px; box-shadow: 3px 3px 0px black; cursor:pointer;" title="Panduan Penggunaan">?</div>
+
+            <a href="/settings/" style="text-decoration:none; width:40px; height:40px; border:3px solid black; background:black; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-family:'Bebas Neue'; font-size:16px; box-shadow: 3px 3px 0px black;" title="Profil Admin ({{ request.user.username }})">
+                {{ global_user_initials }}
+            </a>
+        </div>
+    </div>
+
+    <div class="content-pad">
+        <div class="pg-title">PENGATURAN SISTEM</div>
+
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+
+        <div class="settings-card">
+            <div class="card-header">👤 PENGATURAN PROFIL & AKUN</div>
+            <form method="POST" action="/settings/">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="update_profile">
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" name="username" class="form-input" value="{{ request.user.username }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat Email</label>
+                        <input type="email" name="email" class="form-input" value="{{ request.user.email }}" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-action blue-btn">Perbarui Profil</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="settings-card">
+            <div class="card-header">🔒 KEAMANAN & KATA SANDI</div>
+            <form method="POST" action="/settings/">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="change_password">
+                
+                <div class="form-group">
+                    <label>Kata Sandi Saat Ini</label>
+                    <input type="password" name="current_password" class="form-input" required>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Kata Sandi Baru</label>
+                        <input type="password" name="new_password" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Konfirmasi Kata Sandi Baru</label>
+                        <input type="password" name="confirm_password" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-action blue-btn">Ubah Kata Sandi</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="settings-card">
+            <div class="card-header">⚙️ ATURAN SIRKULASI & FINANSIAL</div>
+            <form method="POST" action="/settings/">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="update_circulation">
+                
+                <div class="form-group">
+                    <label>Nama Instansi / Perpustakaan</label>
+                    <input type="text" name="nama_perpustakaan" class="form-input" value="Perpustakaan Calvin" required>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tarif Denda Keterlambatan (Per Hari)</label>
+                        <input type="number" name="denda_per_hari" class="form-input" value="{{ konfig.denda_per_hari|default:'1000' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Batas Maksimal Hari Pinjam (Durasi)</label>
+                        <input type="number" name="durasi_pinjam" class="form-input" value="{{ konfig.durasi_pinjam|default:'14' }}" required>
+                    </div>
+                </div>
+                
+                <input type="hidden" name="maks_denda" value="{{ konfig.maks_denda|default:'50000' }}">
+                <input type="hidden" name="maks_buku" value="{{ konfig.maks_buku|default:'3' }}">
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-action">Simpan Aturan Sirkulasi</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="settings-card">
+            <div class="card-header">🎨 PREFERENSI ANTARMUKA VIEWS</div>
+            
+            <div class="toggle-row">
+                <div class="toggle-label">
+                    <h4>Notifikasi Desktop</h4>
+                    <p>Tampilkan pop-up notifikasi pada sistem operasional</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="notifToggle" checked onchange="saveToggleState('notif', this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-label">
+                    <h4>Suara Notifikasi</h4>
+                    <p>Bunyi interaktif saat penyerahan / pengembalian buku sukses</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="soundToggle" checked onchange="saveToggleState('sound', this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <div class="toggle-label">
+                    <h4>Highlight Baris Terlambat</h4>
+                    <p>Beri warna merah kontras langsung pada row tabel yang telat</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="highlightToggle" checked onchange="saveToggleState('highlight', this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="info-card">
+            <strong>📋 LOG REGISTER KONFIGURASI SAAT INI</strong>
+            {{ konfig.get_info|default:"Konfigurasi Sirkulasi Berjalan Optimal." }}
+        </div>
+    </div>
+</div>
+
+<div id="modalPanduan" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #F4EFE6; border: 4px solid #111111; padding: 30px; width: 100%; max-width: 520px; box-shadow: 8px 8px 0px #111111;">
+        <h2 style="font-family: 'Bebas Neue', sans-serif; font-size: 32px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Bantuan & Panduan Sistem</h2>
+        <p style="font-family: 'Space Mono', monospace; font-size: 11px; color:#555; margin-bottom: 15px;">// Modul Ringkas Navigasi Utama</p>
+        <hr style="border: 2px solid #111111; margin-bottom: 20px;">
+        
+        <ul style="line-height: 1.8; font-size: 13px; font-weight: 600; list-style: none; display: flex; flex-direction: column; gap: 12px;">
+            <li>💡 <strong style="color: var(--pink);">Tombol Lonceng (🔔):</strong> Menampilkan total transaksi yang melewati batas tenggat waktu pinjam secara real-time.</li>
+            <li>⚙️ <strong style="color: var(--blue);">Tombol Avatar ({{ global_user_initials }}):</strong> Akses cepat menuju halaman konfigurasi denda sirkulasi, durasi pinjam, dan hak akses admin.</li>
+            <li>📌 <strong style="color: var(--black);">Data Dinamis:</strong> Seluruh kartu indikator statistik terhubung langsung ke basis data utama perpustakaan.</li>
+        </ul>
+
+        <div style="margin-top: 30px; text-align: right;">
+            <button onclick="tutupModalPanduan()" style="background: var(--yellow); border: 3px solid #111111; font-weight: 800; text-transform: uppercase; font-size: 13px; padding: 10px 24px; cursor: pointer; box-shadow: 4px 4px 0px #111111; transition: transform 0.1s;">Paham!</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function saveToggleState(key, isChecked) {
+        localStorage.setItem('set_' + key, isChecked);
+        if(key === 'sound' && isChecked) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch (e) { console.log("Audio context blocked."); }
+        }
+    }
+
+    // Fungsi Panduan Penggunaan
+    function bukaModalPanduan() {
+        document.getElementById('modalPanduan').style.display = 'flex';
+    }
+    function tutupModalPanduan() {
+        document.getElementById('modalPanduan').style.display = 'none';
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        ['notif', 'sound', 'highlight'].forEach(function(key) {
+            const savedState = localStorage.getItem('set_' + key);
+            if (savedState !== null) {
+                document.getElementById(key + 'Toggle').checked = (savedState === 'true');
+            }
+        });
+    });
+
+    window.onclick = function(event) {
+        let panduanModal = document.getElementById('modalPanduan');
+        if (event.target == panduanModal) {
+            panduanModal.style.display = "none";
+        }
+    }
+
+    function updateClock() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+        const dateString = now.toLocaleDateString('id-ID', options).toUpperCase();
+        
+        let hours = now.getHours().toString().padStart(2, '0');
+        let minutes = now.getMinutes().toString().padStart(2, '0');
+        let seconds = now.getSeconds().toString().padStart(2, '0');
+        
+        const clockEl = document.getElementById('liveClock');
+        if (clockEl) {
+            clockEl.innerText = `${dateString} | ${hours}:${minutes}:${seconds} WIB`;
+        }
+    }
+    
+    setInterval(updateClock, 1000);
+    updateClock();
+
+</script>
+</body>
+</html>

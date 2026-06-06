@@ -139,7 +139,7 @@ Sistem ini dirancang sangat berstruktur dengan mematuhi 4 pilar OOP Python secar
 
 
 
-
+DONE
 
 
 
